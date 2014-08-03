@@ -115,10 +115,14 @@ abstract class ModelBase {
      * @param mixed $v
      * @return boolean
      */
-    public function test($k, $op, $v) {
+    public function test($k, $op, $v = null) {
         if (isset($this->$k)) {
             $k = $this->$k;
             
+            //use '==' as default op, if not provided
+            if (func_num_args() === 2)
+                list($op, $v) = array('==', $op);
+
             //primitive comparison
             if (array_search($op, explode(',', '===,!==,==,!=,>,>=,<,<=')) !== false) {
                 //cant do return eval();
@@ -230,7 +234,6 @@ class ModelCollection implements Iterator, Countable, ArrayAccess {
      * @return ModelCollection
      */
     public function __call($name, $arguments) {
-        array_unshift($arguments, '==');
         array_unshift($arguments, $name);
         return call_user_func_array(array($this, 'filter'), $arguments);
     }
