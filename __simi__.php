@@ -19,7 +19,7 @@ abstract class ModelBase {
     
     
     /**
-     * Get record by id
+     * Get record by id wrapped in a ModelBase
      * @param string $class
      * @param int $id
      * @return ModelBase
@@ -28,7 +28,7 @@ abstract class ModelBase {
         if (isset(static::$cache[$class][$id]))
             return static::$cache[$class][$id];
         else {
-            $record = Query::table(Base::table($class))->where('id', '=', $id)->fetch();
+            $record = System\Database\Query::table(Base::table($class))->where('id', '=', $id)->fetch();
             return $record? new static((array)$record) : null;
         }
     }
@@ -42,7 +42,7 @@ abstract class ModelBase {
         if (!isset(static::$cache[$class])) {
             $result = System\Database\Query::table(Base::table($class))->get();
             $records = array();
-            foreach ($result as &$record)
+            foreach ($result as $record)
                 //index by id
                 $records[$record->id] = new static($record);
             
@@ -96,6 +96,16 @@ abstract class ModelBase {
             $template = str_replace('{{ '.$k.' }}', $v, $template);
         
         return $template;
+    }
+
+    /**
+     * Get model's attribute
+     * @param  string $name
+     * @param  mixed $default
+     * @return mixed
+     */
+    public function get($name, $default = '') {
+        return isset($this->$name)? $this->$name : $default;
     }
     
     /**
@@ -436,4 +446,23 @@ function categoryes($id = -1) {
  */
 function pages($id = -1) {
     return $id >= 0? ModelPage::id($id) : ModelPage::listing();
+}
+
+/**
+ * Check wheater on category page
+ * @return boolean
+ */
+function is_category() {
+	return strpos(current_url(), 'category/') === 0;
+}
+
+/**
+ * @return string
+ */
+function current_category_slug() {
+	return is_category()? str_replace('category/', '', current_url()) : '';
+}
+
+function posts_page_url() {
+	return base_url(Registry::prop('posts_page', 'slug'));
 }
